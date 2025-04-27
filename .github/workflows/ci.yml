@@ -8,47 +8,53 @@ on:
       - 'backend/**'
 
 jobs:
-  frontend:
-    name: Frontend Build Check
-    if: contains(github.event.pull_request.changed_files, 'frontend/')
+  changes:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-    
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend:  ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
-      
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+              
+  frontend:
+    name: Frontend Build Check
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: ./frontend } }
+    steps:
+      - uses: actions/checkout@v4
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.15.0'
           cache: 'npm'
-      
       - name: Install dependencies
         run: npm install
-      
       - name: Build production bundle
         run: npm run build
 
   backend:
     name: Backend Build Check
-    if: contains(github.event.pull_request.changed_files, 'backend/')
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-    
+    defaults: { run: { working-directory: ./backend } }
     steps:
       - uses: actions/checkout@v4
-      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-      
       - name: Install dependencies
         run: go mod download
-      
       - name: Build binary
         run: go build -v ./...
