@@ -18,5 +18,5 @@ func main() {
 		fmt.Println("could not write file:", err)
 		return
 	}
-	fmt.Println("OK — wrote out.png (size:", len(img), "bytes)")
+	fmt.Println("OK — wrote output.png (size:", len(img), "bytes)")
 }
