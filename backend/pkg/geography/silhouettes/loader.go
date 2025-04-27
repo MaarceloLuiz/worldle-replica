@@ -3,6 +3,7 @@ package silhouettes
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -11,10 +12,6 @@ import (
 	"github.com/MaarceloLuiz/worldle-replica/pkg/github"
 	"github.com/sirupsen/logrus"
 )
-
-type SilhouetteResponse struct {
-	URL string `json:"url"`
-}
 
 func FetchSilhouette() ([]byte, error) {
 	gitConfig, err := github.LoadGitConfig()
@@ -25,20 +22,24 @@ func FetchSilhouette() ([]byte, error) {
 
 	country, err := getRandomCountry()
 	if err != nil {
+		logrus.Error("Error generating random country")
 		return nil, err
 	}
-	url := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s/silhouettes/%s.png",
-		gitConfig.Owner, gitConfig.Repo, gitConfig.Branch, country)
 
-	request, err := http.NewRequest("GET", url, nil)
+	apiURL := fmt.Sprintf(
+		"https://api.github.com/repos/%s/%s/contents/silhouettes/%s.png?ref=%s",
+		gitConfig.Owner, gitConfig.Repo, country, gitConfig.Branch,
+	)
+
+	request, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
 		logrus.Error("Error creating request to GitHub API")
 		return nil, err
 	}
-
 	request.Header.Set("Authorization", "Bearer "+gitConfig.Token)
-	client := &http.Client{}
-	response, err := client.Do(request)
+	request.Header.Set("Accept", "application/vnd.github.raw")
+
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		logrus.Error("Failed to make request to GitHub API: Authorization issue or network error")
 		return nil, err
@@ -50,14 +51,13 @@ func FetchSilhouette() ([]byte, error) {
 		return nil, fmt.Errorf("failed to fetch silhouette from GitHub API: %s", response.Status)
 	}
 
-	silhouetteResponse := SilhouetteResponse{URL: url}
-	jsonResponse, err := json.Marshal(silhouetteResponse)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		logrus.Error("Failed to marshal silhouette response to JSON")
+		logrus.Error("Failed to read response body from GitHub API")
 		return nil, err
 	}
 
-	return jsonResponse, nil
+	return data, nil
 }
 
 func getRandomCountry() (string, error) {
