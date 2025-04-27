@@ -3,10 +3,14 @@ name: CI Pipeline
 on:
   pull_request:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
 
 jobs:
   frontend:
     name: Frontend Build Check
+    if: contains(github.event.pull_request.changed_files, 'frontend/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,6 +33,7 @@ jobs:
 
   backend:
     name: Backend Build Check
+    if: contains(github.event.pull_request.changed_files, 'backend/')
     runs-on: ubuntu-latest
     defaults:
       run:
