@@ -14,46 +14,37 @@ import (
 )
 
 func FetchSilhouette() ([]byte, error) {
-	gitConfig, err := github.LoadGitConfig()
-	if err != nil {
-		logrus.Error("Error loading GitHub configuration")
-		return nil, err
-	}
-
 	country, err := getRandomCountry()
 	if err != nil {
 		logrus.Error("Error generating random country")
 		return nil, err
 	}
 
-	apiURL := fmt.Sprintf(
-		"https://api.github.com/repos/%s/%s/contents/silhouettes/%s.png?ref=%s",
-		gitConfig.Owner, gitConfig.Repo, country, gitConfig.Branch,
-	)
+	endpoint := fmt.Sprintf("contents/silhouettes/%s.png", country)
+	headers := map[string]string{
+		"Accept": "application/vnd.github.raw",
+	}
 
-	request, err := http.NewRequest("GET", apiURL, nil)
+	request, err := createGitHubRequest(endpoint, headers)
 	if err != nil {
-		logrus.Error("Error creating request to GitHub API")
+		logrus.Error("Error creating new GitHub request")
 		return nil, err
 	}
-	request.Header.Set("Authorization", "Bearer "+gitConfig.Token)
-	request.Header.Set("Accept", "application/vnd.github.raw")
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
-		logrus.Error("Failed to make request to GitHub API: Authorization issue or network error")
+		logrus.Errorf("Failed to make request to GitHub API - Authorization issue or network error: %v", err)
 		return nil, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		logrus.Error("Failed to fetch silhouette from GitHub API: ", response.Status)
-		return nil, fmt.Errorf("failed to fetch silhouette from GitHub API: %s", response.Status)
+		return nil, fmt.Errorf("failed to fetch silhouette from GitHub API")
 	}
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		logrus.Error("Failed to read response body from GitHub API")
+		logrus.Errorf("Failed to read response body from GitHub API: %v", err)
 		return nil, err
 	}
 
@@ -61,32 +52,21 @@ func FetchSilhouette() ([]byte, error) {
 }
 
 func getRandomCountry() (string, error) {
-	gitConfig, err := github.LoadGitConfig()
+	request, err := createGitHubRequest("contents/silhouettes", nil)
 	if err != nil {
-		logrus.Error("Error loading GitHub configuration")
+		logrus.Error("Error creating new GitHub request")
 		return "", err
 	}
 
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/silhouettes?ref=%s",
-		gitConfig.Owner, gitConfig.Repo, gitConfig.Branch)
-
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		logrus.Error("Error creating request to GitHub API")
-		return "", err
-	}
-
-	request.Header.Set("Authorization", "Bearer "+gitConfig.Token)
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		logrus.Error("Failed to make request to GitHub API: Authorization issue or network error")
+		logrus.Errorf("Failed to make request to GitHub API - Authorization issue or network error: %v", err)
 		return "", err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		logrus.Error("Failed to fetch silhouettes from GitHub API: ", response.Status)
 		return "", fmt.Errorf("failed to fetch silhouettes from GitHub API: %s", response.Status)
 	}
 
@@ -106,7 +86,6 @@ func getRandomCountry() (string, error) {
 	}
 
 	if len(countries) == 0 {
-		logrus.Error("No silhouette files found in the repository")
 		return "", fmt.Errorf("no silhouette files found in the repository")
 	}
 
@@ -117,4 +96,28 @@ func getRandomCountry() (string, error) {
 	randomCountry := countries[randomIndex]
 
 	return randomCountry, nil
+}
+
+func createGitHubRequest(endpoint string, headers map[string]string) (*http.Request, error) {
+	gitConfig, err := github.LoadGitConfig()
+	if err != nil {
+		logrus.Error("Error loading GitHub configuration")
+		return nil, err
+	}
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/%s?ref=%s",
+		gitConfig.Owner, gitConfig.Repo, endpoint, gitConfig.Branch)
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		logrus.Error("Error creating request to GitHub API")
+		return nil, err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+gitConfig.Token)
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
+
+	return request, nil
 }
