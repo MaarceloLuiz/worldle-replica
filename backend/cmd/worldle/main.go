@@ -1,22 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"net/http"
 
-	"github.com/MaarceloLuiz/worldle-replica/pkg/geography/silhouettes"
+	"github.com/MaarceloLuiz/worldle-replica/pkg/api"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	img, err := silhouettes.FetchSilhouette()
-	if err != nil {
-		fmt.Println("Error fetching silhouette:", err)
-		return
-	}
+	http.HandleFunc("/api/silhouette", api.SilhouetteHandler)
+	http.HandleFunc("/api/newgame", api.NewGameHandler)
 
-	if err := os.WriteFile("output.png", img, 0644); err != nil {
-		fmt.Println("could not write file:", err)
-		return
-	}
-	fmt.Println("OK — wrote output.png (size:", len(img), "bytes)")
+	logrus.Info("Starting server on :8080")
+	logrus.Fatal(http.ListenAndServe(":8080", nil))
 }
