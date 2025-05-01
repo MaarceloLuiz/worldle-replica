@@ -13,13 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func FetchSilhouette() ([]byte, error) {
-	country, err := getRandomCountry()
-	if err != nil {
-		logrus.Error("Error generating random country")
-		return nil, err
-	}
-
+func FetchSilhouette(country string) ([]byte, error) {
 	endpoint := fmt.Sprintf("contents/silhouettes/%s.png", country)
 	headers := map[string]string{
 		"Accept": "application/vnd.github.raw",
@@ -51,7 +45,7 @@ func FetchSilhouette() ([]byte, error) {
 	return data, nil
 }
 
-func getRandomCountry() (string, error) {
+func GetRandomCountry() (string, error) {
 	request, err := createGitHubRequest("contents/silhouettes", nil)
 	if err != nil {
 		logrus.Error("Error creating new GitHub request")
