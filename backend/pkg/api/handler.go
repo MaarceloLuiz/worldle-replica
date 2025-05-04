@@ -58,11 +58,6 @@ func GuessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method. Use POST.", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var guessCountry struct {
 		Guess string `json:"guess"`
 	}
