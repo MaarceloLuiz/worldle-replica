@@ -51,6 +51,18 @@ func AllTerritoriesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GuessHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "Use POST with a JSON payload to make a guess."}`))
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method. Use POST.", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var guessCountry struct {
 		Guess string `json:"guess"`
 	}
@@ -68,15 +80,9 @@ func GuessHandler(w http.ResponseWriter, r *http.Request) {
 	// Case-insensitive comparison of guess and current country.
 	isCorrect := strings.EqualFold(guessCountry.Guess, answerCountry)
 
-	distance, err := geocalc.GetDistance(guessCountry.Guess, answerCountry)
+	distance, direction, err := geocalc.GetDistanceAndDirection(guessCountry.Guess, answerCountry)
 	if err != nil {
 		http.Error(w, "Failed to calculate distance", http.StatusInternalServerError)
-		return
-	}
-
-	direction, err := geocalc.GetDirection(guessCountry.Guess, answerCountry)
-	if err != nil {
-		http.Error(w, "Failed to calculate direction", http.StatusInternalServerError)
 		return
 	}
 

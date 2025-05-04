@@ -13,27 +13,10 @@ import (
 var mapsApiKey string
 
 func init() {
-	mapsApiKey := os.Getenv("MAPS_API_KEY")
+	mapsApiKey = os.Getenv("MAPS_API_KEY")
 	if mapsApiKey == "" {
 		logrus.Fatal("MAPS_API_KEY environment variable is not set")
 	}
-}
-
-func distanceMatrix(guess, answer string) (float64, error) {
-	url := fmt.Sprintf("https://maps.googleapis.com/maps/api/distancematrix/json?origins=%s&destinations=%s&key=%s",
-		guess, answer, mapsApiKey)
-
-	results, err := mapsApi(url)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get distance matrix from Google Maps API: %w", err)
-	}
-
-	rows := results["rows"].([]interface{})[0].(map[string]interface{})
-	elements := rows["elements"].([]interface{})[0].(map[string]interface{})
-	distance := elements["distance"].(map[string]interface{})
-	value := distance["value"].(float64) //distance in meters
-
-	return value, nil
 }
 
 func geocode(country string) (float64, float64, error) {
