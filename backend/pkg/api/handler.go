@@ -3,9 +3,11 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/MaarceloLuiz/worldle-replica/pkg/game"
-	geography "github.com/MaarceloLuiz/worldle-replica/pkg/geography/territories"
+	"github.com/MaarceloLuiz/worldle-replica/pkg/geography/geocalc"
+	terr "github.com/MaarceloLuiz/worldle-replica/pkg/geography/territories"
 )
 
 func NewGameHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +34,7 @@ func SilhouetteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AllTerritoriesHandler(w http.ResponseWriter, r *http.Request) {
-	territories, err := geography.GetFormattedTerritoryNames()
+	territories, err := terr.GetFormattedTerritoryNames()
 	if err != nil {
 		http.Error(w, "Failed to fetch territories", http.StatusInternalServerError)
 		return
@@ -46,4 +48,44 @@ func AllTerritoriesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(jsonData)
+}
+
+func GuessHandler(w http.ResponseWriter, r *http.Request) {
+	var guessCountry struct {
+		Guess string `json:"guess"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&guessCountry); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	answerCountry := game.State.Country
+	if answerCountry == "" {
+		http.Error(w, "Game not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	// Case-insensitive comparison of guess and current country.
+	isCorrect := strings.EqualFold(guessCountry.Guess, answerCountry)
+
+	distance, err := geocalc.GetDistance(guessCountry.Guess, answerCountry)
+	if err != nil {
+		http.Error(w, "Failed to calculate distance", http.StatusInternalServerError)
+		return
+	}
+
+	direction, err := geocalc.GetDirection(guessCountry.Guess, answerCountry)
+	if err != nil {
+		http.Error(w, "Failed to calculate direction", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"isCorrect": isCorrect,
+		"distance":  distance,
+		"direction": direction,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
