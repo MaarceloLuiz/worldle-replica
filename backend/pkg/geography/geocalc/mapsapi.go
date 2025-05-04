@@ -19,13 +19,13 @@ func init() {
 	}
 }
 
-func distanceMatrix(guess, answer string) float64 {
+func distanceMatrix(guess, answer string) (float64, error) {
 	url := fmt.Sprintf("https://maps.googleapis.com/maps/api/distancematrix/json?origins=%s&destinations=%s&key=%s",
 		guess, answer, mapsApiKey)
 
 	results, err := mapsApi(url)
 	if err != nil {
-		logrus.Fatalf("Failed to get distance matrix from Google Maps API: %v", err)
+		return 0, fmt.Errorf("failed to get distance matrix from Google Maps API: %w", err)
 	}
 
 	rows := results["rows"].([]interface{})[0].(map[string]interface{})
@@ -33,17 +33,16 @@ func distanceMatrix(guess, answer string) float64 {
 	distance := elements["distance"].(map[string]interface{})
 	value := distance["value"].(float64) //distance in meters
 
-	distanceKM := value / 1000
-	return distanceKM
+	return value, nil
 }
 
-func geocode(country string) (float64, float64) {
+func geocode(country string) (float64, float64, error) {
 	url := fmt.Sprintf("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s",
 		country, mapsApiKey)
 
 	results, err := mapsApi(url)
 	if err != nil {
-		logrus.Fatalf("Failed to get geocode from Google Maps API: %v", err)
+		return 0, 0, fmt.Errorf("failed to get geocode from Google Maps API: %w", err)
 	}
 
 	result := results["results"].([]interface{})[0].(map[string]interface{})
@@ -52,33 +51,33 @@ func geocode(country string) (float64, float64) {
 	lat := location["lat"].(float64)
 	lng := location["lng"].(float64)
 
-	return lat, lng
+	return lat, lng, nil
 }
 
 func mapsApi(url string) (map[string]interface{}, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		logrus.Fatal("Error creating request to Google Maps API")
+		return nil, fmt.Errorf("error creating request to Google Maps API: %w", err)
 	}
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
-		logrus.Fatalf("Failed to get a response from Google Maps API: %v", err)
+		return nil, fmt.Errorf("failed to get a response from Google Maps API: %w", err)
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		logrus.Fatalf("Failed to make request to Google Maps API: %v", err)
+		return nil, fmt.Errorf("google Maps API returned status: %s", response.Status)
 	}
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		logrus.Fatalf("Failed to read response body from Google Maps API: %v", err)
+		return nil, fmt.Errorf("failed to read response body from Google Maps API: %w", err)
 	}
 
 	var results map[string]interface{}
 	if err := json.Unmarshal(data, &results); err != nil {
-		logrus.Fatalf("Failed to unmarshal JSON response: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal JSON response: %w", err)
 	}
 
 	return results, nil
