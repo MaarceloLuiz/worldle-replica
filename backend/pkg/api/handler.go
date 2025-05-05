@@ -81,10 +81,24 @@ func GuessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var mapsURL string
+	if isCorrect {
+		mapsURL, err = geocalc.GetMapsURL(answerCountry, answerCountry)
+		direction = ""
+	} else {
+		mapsURL, err = geocalc.GetMapsURL(guessCountry.Guess, answerCountry)
+	}
+
+	if err != nil {
+		http.Error(w, "Failed to generate maps URL", http.StatusInternalServerError)
+		return
+	}
+
 	response := map[string]interface{}{
 		"isCorrect": isCorrect,
 		"distance":  distance,
 		"direction": direction,
+		"url":       mapsURL,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
