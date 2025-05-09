@@ -49,6 +49,12 @@ func GetMapsURL(guess string, answer string) (string, error) {
 	return url, nil
 }
 
+func GetMapsURLAnswer(answer string) (string, error) {
+	url := fmt.Sprintf("https://www.google.com/maps/place/%s", answer)
+
+	return url, nil
+}
+
 func getCachedCoordinates(territory string) (float64, float64, error) {
 	cacheMutex.RLock()
 	coords, found := coordinatesCache[territory]
