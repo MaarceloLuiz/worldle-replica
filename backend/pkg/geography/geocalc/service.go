@@ -2,6 +2,7 @@ package geocalc
 
 import (
 	"fmt"
+	"math"
 	"sync"
 )
 
@@ -27,6 +28,7 @@ func GetDistanceAndDirection(guess string, answer string) (float64, string, erro
 	}
 
 	distanceKM := distance / 1000
+	distanceKM = math.Round(distanceKM)
 	direction := getCompass(guessLat, guessLng, answerLat, answerLng)
 
 	return distanceKM, direction, nil
