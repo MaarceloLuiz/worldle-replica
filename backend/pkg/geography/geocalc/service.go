@@ -2,6 +2,7 @@ package geocalc
 
 import (
 	"fmt"
+	"math"
 	"sync"
 )
 
@@ -27,6 +28,7 @@ func GetDistanceAndDirection(guess string, answer string) (float64, string, erro
 	}
 
 	distanceKM := distance / 1000
+	distanceKM = math.Round(distanceKM)
 	direction := getCompass(guessLat, guessLng, answerLat, answerLng)
 
 	return distanceKM, direction, nil
@@ -45,6 +47,12 @@ func GetMapsURL(guess string, answer string) (string, error) {
 
 	url := fmt.Sprintf("https://www.google.com/maps/dir/%f,%f/%f,%f",
 		guessLat, guessLng, answerLat, answerLng)
+
+	return url, nil
+}
+
+func GetMapsURLAnswer(answer string) (string, error) {
+	url := fmt.Sprintf("https://www.google.com/maps/place/%s", answer)
 
 	return url, nil
 }

@@ -50,6 +50,34 @@ func AllTerritoriesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+func AnswerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "Use GET to retrieve the answer."}`))
+		return
+	}
+
+	answerCountry := game.State.Country
+	if answerCountry == "" {
+		http.Error(w, "Game not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	mapsURL, err := geocalc.GetMapsURLAnswer(answerCountry)
+	if err != nil {
+		http.Error(w, "Failed to generate maps URL for the answer", http.StatusInternalServerError)
+		return
+	}
+	response := map[string]string{
+		"answer": strings.ReplaceAll(strings.ToUpper(answerCountry), "_", " "),
+		"url":    mapsURL,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func GuessHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Content-Type", "application/json")

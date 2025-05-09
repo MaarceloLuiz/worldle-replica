@@ -11,6 +11,7 @@ func main() {
 	http.HandleFunc("/api/newgame", corsMiddleware(api.NewGameHandler))
 	http.HandleFunc("/api/silhouette", corsMiddleware(api.SilhouetteHandler))
 	http.HandleFunc("/api/territories", corsMiddleware(api.AllTerritoriesHandler))
+	http.HandleFunc("/api/answer", corsMiddleware(api.AnswerHandler))
 	http.HandleFunc("/api/guess", corsMiddleware(api.GuessHandler))
 
 	logrus.Info("Starting server on :8080")
