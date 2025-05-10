@@ -69,8 +69,9 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to generate maps URL for the answer", http.StatusInternalServerError)
 		return
 	}
+
 	response := map[string]string{
-		"answer": strings.ReplaceAll(strings.ToUpper(answerCountry), "_", " "),
+		"answer": answerCountry,
 		"url":    mapsURL,
 	}
 
@@ -93,6 +94,7 @@ func GuessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+	guessCountry.Guess = strings.ReplaceAll(guessCountry.Guess, " ", "_")
 
 	answerCountry := game.State.Country
 	if answerCountry == "" {

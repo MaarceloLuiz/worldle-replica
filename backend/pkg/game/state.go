@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"strings"
 	"sync"
 
 	"github.com/MaarceloLuiz/worldle-replica/pkg/geography/silhouettes"
@@ -31,7 +32,7 @@ func StartNewGame() error {
 		return err
 	}
 
-	State.Country = country
+	State.Country = strings.ReplaceAll(strings.ToUpper(country), "_", " ")
 	State.Image = img
 	return nil
 }
