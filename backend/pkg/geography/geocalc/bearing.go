@@ -19,37 +19,12 @@ func getCompass(guessLat, guessLng, answerLat, answerLng float64) string {
 }
 
 func degreesToCompass(degrees float64) string {
-	ranges := map[string][2]float64{
-		"N":   {354.375, 5.625}, // Narrow range for North
-		"NNE": {5.625, 28.125},
-		"NE":  {28.125, 61.875},
-		"ENE": {61.875, 84.375},
-		"E":   {84.375, 95.625}, // Narrow range for East
-		"ESE": {95.625, 118.125},
-		"SE":  {118.125, 151.875},
-		"SSE": {151.875, 174.375},
-		"S":   {174.375, 185.625}, // Narrow range for South
-		"SSW": {185.625, 208.125},
-		"SW":  {208.125, 241.875},
-		"WSW": {241.875, 264.375},
-		"W":   {264.375, 275.625}, // Narrow range for West
-		"WNW": {275.625, 298.125},
-		"NW":  {298.125, 331.875},
-		"NNW": {331.875, 354.375},
+	directions := []string{
+		"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+		"S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
 	}
-
-	// special case for North since it wraps around 360
-	if degrees > 337.5 || degrees <= 22.5 {
-		return "N"
-	}
-
-	for direction, bounds := range ranges {
-		if bounds[0] < degrees && degrees <= bounds[1] {
-			return direction
-		}
-	}
-
-	return "" // should never reach here if the input is valid
+	idx := int((degrees+11.25)/22.5) % 16
+	return directions[idx]
 }
 
 // When calculate the initial bearing using the atan2 function, the result (after converting to degrees)
