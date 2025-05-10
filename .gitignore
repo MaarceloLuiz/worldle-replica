@@ -24,3 +24,4 @@ yarn-error.log*
 
 # local env files
 config.sh
+.env*
