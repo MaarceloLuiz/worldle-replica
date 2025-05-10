@@ -47,7 +47,8 @@ const GuessInput = ({ territories, onSubmit, disabled }) => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       const selected = suggestions[selectedIndex];
-      handleSubmit(selected?.name || input);
+      // Only submit if there's a selected suggestion from the list
+      handleSubmit(selected?.name);
     }
     if (e.key === 'ArrowDown') {
       setSelectedIndex(prev => Math.min(prev + 1, suggestions.length - 1));
