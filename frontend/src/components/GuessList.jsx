@@ -1,3 +1,13 @@
+import NIcon from '../assets/icons/N.png';
+import NEIcon from '../assets/icons/NE.png';
+import EIcon from '../assets/icons/E.png';
+import SEIcon from '../assets/icons/SE.png';
+import SIcon from '../assets/icons/S.png';
+import SWIcon from '../assets/icons/SW.png';
+import WIcon from '../assets/icons/W.png';
+import NWIcon from '../assets/icons/NW.png';
+import WorldIcon from '../assets/icons/world.png';
+
 const GuessList = ({ guesses, isGameOver }) => {
   const rows = [...guesses, ...Array(6 - guesses.length).fill(null)];
 
@@ -20,40 +30,50 @@ const GuessRow = ({ guess, isGameOver }) => {
     </div>
   );
 
-  // Direction arrow mapping based on the API response format
-  const directionArrows = {
-    'N': '⬆',
-    'NNE': '↗',
-    'NE': '↗',
-    'ENE': '↗',
-    'E': '➡',
-    'ESE': '↘',
-    'SE': '↘',
-    'SSE': '↘',
-    'S': '⬇',
-    'SSW': '↙',
-    'SW': '↙',
-    'WSW': '↙',
-    'W': '⬅',
-    'WNW': '↖',
-    'NW': '↖',
-    'NNW': '↖'
+ // Direction mapping to simplify the number of icons needed
+ const directionIcons = {
+    'N': NIcon,
+    'NNE': NEIcon,
+    'NE': NEIcon,
+    'ENE': NEIcon,
+    'E': EIcon,
+    'ESE': SEIcon,
+    'SE': SEIcon,
+    'SSE': SEIcon,
+    'S': SIcon,
+    'SSW': SWIcon,
+    'SW': SWIcon,
+    'WSW': SWIcon,
+    'W': WIcon,
+    'WNW': NWIcon,
+    'NW': NWIcon,
+    'NNW': NWIcon
   };
 
-  // Get the direction arrow based on the direction from the API
-  const directionArrow = guess.direction ? directionArrows[guess.direction] || guess.direction : '';
+  // Get the icon name based on the direction from the API
+const iconSrc = guess.direction ? directionIcons[guess.direction] : '';
 
   return (
     <div className="guess-row">
       <div className="guess-cell country-name">{guess.country}</div>
       <div className="guess-cell distance">{guess.distance} km</div>
       <div className="guess-cell direction">
-        {directionArrow}
+        {iconSrc && (
+          <img 
+            src={iconSrc} 
+            alt={guess.direction} 
+            style={{ width: '24px', height: '24px' }} 
+          />
+        )}
       </div>
       <div className="guess-cell map-link">
         {isGameOver && guess.mapsUrl && (
           <a href={guess.mapsUrl} target="_blank" rel="noopener noreferrer" title="View on Google Maps">
-            🌎
+            <img 
+              src={WorldIcon} 
+              alt="View on Google Maps" 
+              style={{ width: '24px', height: '24px' }} 
+            />
           </a>
         )}
       </div>
