@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const GuessInput = ({ territories, onSubmit, disabled }) => {
   const [input, setInput] = useState('');
@@ -9,7 +9,8 @@ const GuessInput = ({ territories, onSubmit, disabled }) => {
   const suggestionsRef = useRef(null);
   const selectedItemRef = useRef(null);
 
-  const getSuggestions = (value) => {
+  // FIX: Wrapped in useCallback to stabilize the function reference
+  const getSuggestions = useCallback((value) => {
     const query = value.toLowerCase();
     // If territories is not an array or is empty, return empty array
     if (!Array.isArray(territories) || territories.length === 0) {
@@ -37,7 +38,7 @@ const GuessInput = ({ territories, onSubmit, disabled }) => {
           (t.code && t.code.toLowerCase() === query)
         );
     }
-  };
+  }, [territories]); // Dependency ensures it only updates when territories change
 
   const handleSubmit = () => {
     if (!input.trim() || disabled) return;
@@ -106,7 +107,7 @@ const GuessInput = ({ territories, onSubmit, disabled }) => {
       }
     }, 200);
     return () => clearTimeout(timer);
-  }, [input, territories]);
+  }, [input, getSuggestions]); // FIX: Added getSuggestions to dependencies
 
   // Scroll selected item into view
   useEffect(() => {
